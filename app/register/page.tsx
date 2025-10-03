@@ -1,16 +1,19 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Eye, EyeOff, ArrowLeft, Mail } from "lucide-react"
-import { register } from "@/lib/api/auth-api"  // <-- import API
+import { register, fetchCurrentUser } from "@/lib/api/auth-api"
 
 export default function RegisterPage() {
+  const router = useRouter()
+
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [formData, setFormData] = useState({
@@ -21,6 +24,20 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const user = await fetchCurrentUser()
+        if (user) {
+          router.push("/")
+        }
+      } catch (err) {
+        console.log(err)
+      }
+    }
+    checkUser()
+  }, [router])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -41,7 +58,6 @@ export default function RegisterPage() {
       const data = await register(formData.email, formData.password)
       console.log("✅ Register success:", data)
 
-      // Hiển thị màn hình success
       setSuccess(true)
     } catch (err: any) {
       setError(err.message)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { login } from "@/lib/api/auth-api";
+import { login, fetchCurrentUser } from "@/lib/api/auth-api";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +19,20 @@ export default function LoginPage() {
 
   const router = useRouter();
 
+  useEffect(() => {
+      const checkUser = async () => {
+        try {
+          const user = await fetchCurrentUser()
+          if (user) {
+            router.push("/")
+          }
+        } catch (err) {
+          console.log(err)
+        }
+      }
+      checkUser()
+    }, [router])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -27,10 +41,6 @@ export default function LoginPage() {
     try {
       const data = await login(email, password);
       console.log("✅ Login success:", data);
-
-      if (data.access_token) {
-        localStorage.setItem("token", data.access_token);
-      }
 
       router.push("/");
     } catch (err: any) {
