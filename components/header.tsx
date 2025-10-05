@@ -1,15 +1,46 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Menu, Search, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { mockSections } from "@/mocks/sections"
 import { SectionNav } from "./section-nav"
 
+import { signOut } from "@/lib/api/auth-api"
+import { fetchCurrentUser } from "@/lib/api/auth-api"
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+type User = {
+  email: string
+}
+
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const currentUser = await fetchCurrentUser()
+        if (currentUser) {
+          setUser(currentUser)
+        }
+      } catch (err) {
+        console.log("Not logged in")
+      }
+    }
+    checkUser()
+  }, [])
 
   const handleLoginClick = () => {
     router.push("/login")
@@ -21,6 +52,17 @@ export function Header() {
 
   const handleSearchClick = () => {
     router.push("/search")
+  }
+
+  const handleLogout = async () => {
+    try {
+      await signOut()              // gọi API logout
+      setUser(null)                // clear user ở FE
+      router.push("/")             // redirect về trang chủ
+    } catch (err) {
+      console.error("Logout failed:", err)
+      alert("Đăng xuất thất bại, vui lòng thử lại")
+    }
   }
 
   return (
@@ -48,20 +90,37 @@ export function Header() {
               <Search className="h-4 w-4" />
             </Button>
 
-            {/* 🔹 Sign In / Sign Up (Desktop) */}
-            <div className="hidden md:flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-transparent"
-                onClick={handleLoginClick}
-              >
-                Login
-              </Button>
-              <Button variant="default" size="sm" onClick={handleRegisterClick}>
-                Register
-              </Button>
-            </div>
+            {/* Nếu có user → hiện avatar + dropdown */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="flex items-center gap-2 cursor-pointer">
+                    <div className="w-8 h-8 rounded-full bg-gray-300" />
+                    <span className="text-sm font-medium">{user.email}</span>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              // Nếu chưa login → hiện Login / Register
+              <div className="hidden md:flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-transparent"
+                  onClick={handleLoginClick}
+                >
+                  Login
+                </Button>
+                <Button variant="default" size="sm" onClick={handleRegisterClick}>
+                  Register
+                </Button>
+              </div>
+            )}
 
             {/* Mobile menu button */}
             <Button
@@ -103,24 +162,43 @@ export function Header() {
                 </div>
               ))}
 
-              {/* 🔹 Sign In / Sign Up (Mobile) */}
+              {/* Mobile user actions */}
               <div className="pt-4 border-t border-border flex flex-col gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full bg-transparent"
-                  onClick={handleLoginClick}
-                >
-                  Login
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="w-full"
-                  onClick={handleRegisterClick}
-                >
-                  Register
-                </Button>
+                {user ? (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gray-300" />
+                      <span className="text-sm">{user.email}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full bg-transparent"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full bg-transparent"
+                      onClick={handleLoginClick}
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="w-full"
+                      onClick={handleRegisterClick}
+                    >
+                      Register
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>

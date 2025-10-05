@@ -38,6 +38,24 @@ export async function register(email: string, password: string) {
   return res.json()
 }
 
+export async function signOut() {
+  const res = await fetch(`${API_BASE_URL}/api/v1/users/sign_out`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail || "Đăng xuất thất bại")
+  }
+
+  return res.json()
+}
+
+
 // Hàm fetch user hiện tại
 export async function fetchCurrentUser() {
   const res = await fetch(`${API_BASE_URL}/api/v1/users/current_user`, {
