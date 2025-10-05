@@ -44,6 +44,7 @@ export function Header() {
   const handleLogout = async () => {
     try {
       await signOut()              // gọi API logout
+      await refreshUser() // cập nhật UI ngay
       router.push("/")             // redirect về trang chủ
     } catch (err) {
       console.error("Logout failed:", err)

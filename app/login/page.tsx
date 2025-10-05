@@ -9,12 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { login, fetchCurrentUser } from "@/lib/api/auth-api";
+import { useAuth } from "@/context/auth-context";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const { isLoggedIn, loading, user, refreshUser } = useAuth()
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
@@ -35,18 +36,16 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError(null);
 
     try {
       const data = await login(email, password);
       console.log("✅ Login success:", data);
-
+      await refreshUser()
       router.push("/");
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setIsLoading(false);
     }
   };
 
@@ -109,8 +108,8 @@ export default function LoginPage() {
 
               {error && <p className="text-sm text-red-500">{error}</p>}
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
               </Button>
             </form>
           </CardContent>
