@@ -18,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/context/auth-context"
 
 type User = {
   email: string
@@ -25,22 +26,8 @@ type User = {
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
+  const { isLoggedIn, loading, user, refreshUser } = useAuth()
   const router = useRouter()
-
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const currentUser = await fetchCurrentUser()
-        if (currentUser) {
-          setUser(currentUser)
-        }
-      } catch (err) {
-        console.log("Not logged in")
-      }
-    }
-    checkUser()
-  }, [])
 
   const handleLoginClick = () => {
     router.push("/login")
@@ -57,7 +44,6 @@ export function Header() {
   const handleLogout = async () => {
     try {
       await signOut()              // gọi API logout
-      setUser(null)                // clear user ở FE
       router.push("/")             // redirect về trang chủ
     } catch (err) {
       console.error("Logout failed:", err)

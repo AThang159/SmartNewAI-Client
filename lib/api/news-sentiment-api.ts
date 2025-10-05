@@ -9,6 +9,7 @@ export async function fetchSentiments(newsList: News[]): Promise<Sentiment[]> {
     body: JSON.stringify({ news: newsList }),
   })
 
+  console.log(res)
   if (!res.ok) throw new Error("Failed to fetch sentiments")
   const data = await res.json()
   return data.news

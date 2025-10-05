@@ -10,6 +10,7 @@ import { ArrowLeft, ArrowRight, Clock } from "lucide-react"
 import { fetchNews } from "@/lib/api/news-api"
 import { fetchSentiments } from "@/lib/api/news-sentiment-api"
 import { News } from "@/types/news"
+import { useAuth } from "@/context/auth-context"
 import Link  from "next/link"
 import {
   Select,
@@ -43,10 +44,9 @@ export default function SearchPage() {
   const [selectedSort, setSelectedSort] = useState("DESC")
   const [results, setResults] = useState<NewsWithSentiment[]>([])
   const [total, setTotal] = useState<number | undefined>(undefined)
-  const [loading, setLoading] = useState(false)
   const [offset, setOffset] = useState(0)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const limit = 20
+  const { isLoggedIn, loading, user, refreshUser } = useAuth()
+    const limit = 20
 
   const [showPagination, setShowPagination] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
@@ -90,22 +90,7 @@ export default function SearchPage() {
     return `${days} ngày trước`
   }
 
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const user = await fetchCurrentUser()
-        if (user) {
-          setIsLoggedIn(true)
-        }
-      } catch (err) {
-        console.log(err)
-      }
-    }
-    checkUser()
-  }, [])
-
   const loadNews = async () => {
-    setLoading(true)
     try {
       const newsList: any = await fetchNews({
         q: searchQuery || undefined,
@@ -120,9 +105,10 @@ export default function SearchPage() {
         const payload = newsList.items.map((n: any) => ({
           title: n.title,
           description: n.description,
-          publish_date: n.published_time, // hoặc n.publish_date tuỳ API trả về
+          publish_date: n.published_time
         }))
         const sentiments = await fetchSentiments(payload)
+        console.log(sentiments)
         const merged: NewsWithSentiment[] = newsList.items.map((n) => {
           const s = sentiments.find((x) => x.title === n.title)
           return s ? { ...n, ...s } : n
@@ -136,13 +122,12 @@ export default function SearchPage() {
       console.error(e)
       setResults([])
     } finally {
-      setLoading(false)
     }
   }
 
   useEffect(() => {
     loadNews()
-  }, [selectedCategory, selectedTime, selectedSort, offset])
+  }, [selectedCategory, selectedTime, selectedSort, offset, isLoggedIn])
 
   const handleSearch = () => {
     setOffset(0) // tìm kiếm mới -> reset offset
