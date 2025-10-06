@@ -22,31 +22,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   const refreshUser = async () => {
-    const maxRetry = 3
-    for (let i = 0; i < maxRetry; i++) {
-      try {
-        const currentUser = await fetchCurrentUser() // fetch với credentials: "include"
-        setUser(currentUser)
-        break
-      } catch (err: any) {
-        if (i < maxRetry - 1) {
-          // chờ 0.5s trước khi retry
-          await new Promise((r) => setTimeout(r, 500))
-        } else {
-          setUser(null)
-        }
-      }
+    try {
+      setLoading(true)
+      const currentUser = await fetchCurrentUser()
+      setUser(currentUser)
+    } catch {
+      setUser(null)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   useEffect(() => {
     refreshUser()
   }, [])
 
+  useEffect(() => {
+    //console.log(user)
+  }, [user])
+
   return (
     <AuthContext.Provider
-      value={{ isLoggedIn: !!user, user, loading, refreshUser }}
+      value={{ isLoggedIn: !!user && !loading, user, loading, refreshUser }}
     >
       {children}
     </AuthContext.Provider>

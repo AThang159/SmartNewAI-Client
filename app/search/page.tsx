@@ -107,6 +107,7 @@ export default function SearchPage() {
           description: n.description,
           publish_date: n.published_time
         }))
+        console.log(payload)
         const sentiments = await fetchSentiments(payload)
         console.log(sentiments)
         const merged: NewsWithSentiment[] = newsList.items.map((n) => {
@@ -126,8 +127,11 @@ export default function SearchPage() {
   }
 
   useEffect(() => {
-    loadNews()
-  }, [selectedCategory, selectedTime, selectedSort, offset, isLoggedIn])
+    if (!loading) {
+      loadNews()
+    }
+  }, [selectedCategory, selectedTime, selectedSort, offset, isLoggedIn, loading])
+
 
   const handleSearch = () => {
     setOffset(0) // tìm kiếm mới -> reset offset
