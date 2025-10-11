@@ -1,7 +1,7 @@
 import { News } from "@/types/news"
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000"
+export const API_BACKEND_URL =
+  process.env.NEXT_PUBLIC_API_BACKEND_URL || "http://127.0.0.1:8000/api"
 
 type FetchNewsParams = {
   fields?: string                // "id,title,section"
@@ -33,7 +33,7 @@ export async function fetchNews(params?: FetchNewsParams): Promise<News[]> {
         ).toString()
       : ""
 
-    const res = await fetch(`${API_BASE_URL}/api/v1/news${query}`, {
+    const res = await fetch(`${API_BACKEND_URL}/news${query}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

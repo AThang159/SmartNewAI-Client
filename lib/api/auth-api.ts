@@ -1,9 +1,9 @@
 // auth-api.ts
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000"
+export const API_BACKEND_URL =
+  process.env.NEXT_PUBLIC_API_BACKEND_URL || "http://127.0.0.1:8000/api"
 
 export async function login(email: string, password: string) {
-  const res = await fetch(`${API_BASE_URL}/api/v1/users/sign_in`, {
+  const res = await fetch(`${API_BACKEND_URL}/users/sign_in`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -21,7 +21,7 @@ export async function login(email: string, password: string) {
 }
 
 export async function register(email: string, password: string) {
-  const res = await fetch(`${API_BASE_URL}/api/v1/users/sign_up`, {
+  const res = await fetch(`${API_BACKEND_URL}/auth/sign_up`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -39,7 +39,7 @@ export async function register(email: string, password: string) {
 }
 
 export async function signOut() {
-  const res = await fetch(`${API_BASE_URL}/api/v1/users/sign_out`, {
+  const res = await fetch(`${API_BACKEND_URL}/auth/sign_out`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -58,7 +58,7 @@ export async function signOut() {
 
 // Hàm fetch user hiện tại
 export async function fetchCurrentUser() {
-  const res = await fetch(`${API_BASE_URL}/api/v1/users/current_user`, {
+  const res = await fetch(`${API_BACKEND_URL}/auth/current_user`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
