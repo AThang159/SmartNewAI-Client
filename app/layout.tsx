@@ -3,6 +3,7 @@ import { GeistSans, GeistMono } from "@/lib/fonts"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { AuthProvider } from "@/context/auth-context"
+import FloatingChatbot from "@/components/floating-chatbot"
 
 export const metadata: Metadata = {
   title: "My App",
@@ -17,6 +18,7 @@ export default function RootLayout({
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <AuthProvider>
           {children}
+          <FloatingChatbot></FloatingChatbot>
         </AuthProvider>
         <Analytics />
       </body>

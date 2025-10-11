@@ -1,5 +1,7 @@
 "use client"
 
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -21,7 +23,8 @@ import {
 } from "@/components/ui/select"
 import { SentimentChart } from "@/components/sentiment-chart"
 import { Sentiment } from "@/types/sentiment"
-import { fetchCurrentUser } from "@/lib/api/auth-api"
+import { fetchAnalyzeNews } from "@/lib/api/analyze-news"
+import AnalysisBox from "@/components/analysis-box"
 
 export type NewsWithSentiment = News & Sentiment
 
@@ -46,7 +49,9 @@ export default function SearchPage() {
   const [total, setTotal] = useState<number | undefined>(undefined)
   const [offset, setOffset] = useState(0)
   const { isLoggedIn, loading, user, refreshUser } = useAuth()
-    const limit = 20
+  const limit = 10
+  const [analyzeNews, setAnalyzeNews] = useState("")
+  const [analyzing, setAnalyzing] = useState(false)
 
   const [showPagination, setShowPagination] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
@@ -107,9 +112,9 @@ export default function SearchPage() {
           description: n.description,
           publish_date: n.published_time
         }))
-        console.log(payload)
+
         const sentiments = await fetchSentiments(payload)
-        console.log(sentiments)
+
         const merged: NewsWithSentiment[] = newsList.items.map((n) => {
           const s = sentiments.find((x) => x.title === n.title)
           return s ? { ...n, ...s } : n
@@ -118,6 +123,7 @@ export default function SearchPage() {
       } else {
         setResults(newsList.items)
       }
+
       setTotal(newsList.page.total)
     } catch (e) {
       console.error(e)
@@ -132,6 +138,21 @@ export default function SearchPage() {
     }
   }, [selectedCategory, selectedTime, selectedSort, offset, isLoggedIn, loading])
 
+  
+  const handleAnalyze = async () => {
+    if (!results.length) return
+    setAnalyzing(true)
+    try {
+      // Nếu bạn có API thật thì dùng:
+      // const analyze = await fetchAnalyzeNews(results)
+      setAnalyzeNews(sampleAnalyze)
+    } catch (err) {
+      console.error(err)
+      setAnalyzeNews("Không thể phân tích (quota giới hạn).")
+    } finally {
+      setAnalyzing(false)
+    }
+  }
 
   const handleSearch = () => {
     setOffset(0) // tìm kiếm mới -> reset offset
@@ -324,13 +345,29 @@ export default function SearchPage() {
                 )}
               </div>
             </div>
-            {/* Quảng cáo (chiếm 1/3) */}
+            {/* Phân tích AI */}
             <aside className="col-span-1 space-y-4">
-              <div className="w-full h-60 bg-gray-200 flex items-center justify-center rounded">
-                <p>Quảng cáo 1</p>
-              </div>
-              <div className="w-full h-60 bg-gray-200 flex items-center justify-center rounded">
-                <p>Quảng cáo 2</p>
+              <div className="w-full bg-gray-50 border-2 border-blue-400 rounded-xl p-4 shadow-md">
+                <h1 className="text-lg font-bold text-blue-700 mb-3 text-center">
+                  Phân tích chung của AI
+                </h1>
+
+                {analyzing ? (
+                  <p className="text-muted-foreground italic animate-pulse text-center">
+                    Đang phân tích tin tức...
+                  </p>
+                ) : analyzeNews ? (
+                  <AnalysisBox text={analyzeNews} />
+                ) : (
+                  <div className="flex flex-col items-center gap-3">
+                    <p className="text-muted-foreground text-center">
+                      Chưa có dữ liệu để phân tích.
+                    </p>
+                    <Button onClick={handleAnalyze} disabled={!results.length}>
+                      Phân tích AI
+                    </Button>
+                  </div>
+                )}
               </div>
             </aside>
           </section>
@@ -340,3 +377,36 @@ export default function SearchPage() {
     </div>
   )
 }
+
+const sampleAnalyze = `
+### 1) Bức tranh tổng quan
+
+Thị trường và tình hình địa chính trị đang cho thấy một bức tranh khá phức tạp vào ngày 06/10/2025. Sentiment chung là **hỗn hợp**, với các điểm tích cực đến từ triển vọng kinh tế của một số khu vực và chiến lược bảo vệ chuỗi cung ứng, nhưng cũng tồn tại những rủi ro địa chính trị và điều chỉnh thị trường. Mức độ tin cậy của thông tin **cao** do tất cả các bài báo được xuất bản trong cùng một ngày, thể hiện tính thời sự và không có sự mâu thuẫn nội dung đáng kể giữa các nguồn.
+
+### 2) Các điểm nổi bật/đáng chú ý
+
+- **Chính sách Thương mại & Đầu tư của Mỹ:** Chính quyền Trump đang đẩy mạnh việc thu hút đầu tư nước ngoài vào Mỹ và tăng cường đầu tư vào các chuỗi cung ứng chiến lược.
+- **Triển vọng Kinh tế Châu Âu:** Hy Lạp dự báo tăng trưởng kinh tế nhanh hơn vào năm 2026.
+- **Biến động Thị trường Chứng khoán:** FTSE 100 của London thoái lui khỏi mức kỷ lục.
+- **Căng thẳng Địa chính trị & Quan hệ Quốc tế:** Anh–Trung căng thẳng; Ấn Độ lo ngại tụt hậu; Cộng hòa Séc gặp khó khăn về viện trợ cho Ukraine; Mỹ–Nga cân nhắc gia hạn hiệp ước vũ khí hạt nhân.
+- **Vấn đề Nhân đạo:** Một người Trung Quốc thiệt mạng trong vụ lật thuyền di cư ở Serbia.
+
+### 3) Tác động tiềm năng
+
+**Cơ hội:**
+- Đầu tư vào Mỹ có thể tăng nhờ chính sách thu hút FDI.
+- Chuỗi cung ứng được củng cố nhờ đầu tư khoáng sản quý hiếm và chip bán dẫn.
+- Thị trường Hy Lạp hấp dẫn nhờ tăng trưởng mạnh.
+- Ổn định chiến lược nếu Mỹ và Nga gia hạn hiệp ước hạt nhân.
+
+**Rủi ro:**
+- Căng thẳng thương mại Anh–Trung, Ấn–Trung và viện trợ Ukraine có thể ảnh hưởng đến đầu tư.
+- FTSE 100 điều chỉnh là dấu hiệu thị trường nóng.
+- Rủi ro nhân đạo từ di cư tại Châu Âu.
+
+### 4) Khuyến nghị hành động ngắn gọn
+
+- **Nhà đầu tư:** Theo dõi chính sách thương mại, đa dạng hóa danh mục, chú ý thị trường Hy Lạp và lĩnh vực chip.
+- **Doanh nghiệp:** Đánh giá lại chuỗi cung ứng, đặc biệt với Trung Quốc.
+- **Chính phủ:** Duy trì đối thoại, củng cố kinh tế nội địa và an ninh chuỗi cung ứng.
+`
