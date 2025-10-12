@@ -1,13 +1,17 @@
-"use client"
+"use client";
 
-import { Header } from "@/components/header"
-import { NewsGrid } from "@/components/news-grid"
-import { TrendingSidebar } from "@/components/trending-sidebar"
-import { NewsletterSignup } from "@/components/newsletter-signup"
-import { CategorySections } from "@/components/category-sections"
-import { Footer } from "@/components/footer"
+import { CategorySections } from "@/components/category-sections";
+import { Footer } from "@/components/footer";
+import { Header } from "@/components/header";
+import { NewsGrid } from "@/components/news-grid";
+import { NewsletterSignup } from "@/components/newsletter-signup";
+import { TrendingSidebar } from "@/components/trending-sidebar";
 
-export default function SectionPage({ params }: { params: { section: string, "child-section": string } }) {
+export default function SectionPage({
+  params,
+}: {
+  params: { section: string; childSection: string };
+}) {
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -15,7 +19,10 @@ export default function SectionPage({ params }: { params: { section: string, "ch
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3">
-            <NewsGrid section={params.section} subSection={params["child-section"]} />
+            <NewsGrid
+              section={params.section}
+              subSection={params.childSection}
+            />
           </div>
           <div className="lg:col-span-1">
             <TrendingSidebar />
@@ -27,5 +34,5 @@ export default function SectionPage({ params }: { params: { section: string, "ch
       <CategorySections />
       <Footer />
     </div>
-  )
+  );
 }
