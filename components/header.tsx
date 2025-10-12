@@ -1,14 +1,12 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Menu, Search, X } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { mockSections } from "@/mocks/sections"
-import { SectionNav } from "./section-nav"
+import { Button } from "@/components/ui/button";
+import { Menu, Search, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { SectionNav } from "./section-nav";
 
-import { signOut } from "@/lib/api/auth-api"
-import { fetchCurrentUser } from "@/lib/api/auth-api"
+import { signOut } from "@/lib/api/auth-api";
 
 import {
   DropdownMenu,
@@ -17,40 +15,56 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { useAuth } from "@/context/auth-context"
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/context/auth-context";
+import { fetchSections } from "@/lib/api/news-api";
+import { Section } from "@/types/section";
 
 type User = {
-  email: string
-}
+  email: string;
+};
 
 export function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { isLoggedIn, loading, user, refreshUser } = useAuth()
-  const router = useRouter()
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isLoggedIn, loading, user, refreshUser } = useAuth();
+  const [sections, setSections] = useState<Section[]>([]);
+  const router = useRouter();
 
   const handleLoginClick = () => {
-    router.push("/login")
-  }
+    router.push("/login");
+  };
 
   const handleRegisterClick = () => {
-    router.push("/register")
-  }
+    router.push("/register");
+  };
 
   const handleSearchClick = () => {
-    router.push("/search")
-  }
+    router.push("/search");
+  };
 
   const handleLogout = async () => {
     try {
-      await signOut()              // gọi API logout
-      await refreshUser() // cập nhật UI ngay
-      router.push("/")             // redirect về trang chủ
+      await signOut(); // gọi API logout
+      await refreshUser(); // cập nhật UI ngay
+      router.push("/"); // redirect về trang chủ
     } catch (err) {
-      console.error("Logout failed:", err)
-      alert("Đăng xuất thất bại, vui lòng thử lại")
+      console.error("Logout failed:", err);
+      alert("Đăng xuất thất bại, vui lòng thử lại");
     }
-  }
+  };
+
+  useEffect(() => {
+    async function loadSections() {
+      try {
+        let data = await fetchSections();
+        setSections(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    loadSections();
+  }, []);
 
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -58,12 +72,14 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-primary tracking-tight">Reuters</h1>
+            <h1 className="text-2xl font-bold text-primary tracking-tight">
+              Reuters
+            </h1>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
-            <SectionNav sections={mockSections} gridCols={2} />
+            <SectionNav sections={sections} gridCols={2} />
           </div>
 
           {/* Right side actions */}
@@ -89,7 +105,9 @@ export function Header() {
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    Logout
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
@@ -103,7 +121,11 @@ export function Header() {
                 >
                   Login
                 </Button>
-                <Button variant="default" size="sm" onClick={handleRegisterClick}>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleRegisterClick}
+                >
                   Register
                 </Button>
               </div>
@@ -116,7 +138,11 @@ export function Header() {
               className="md:hidden"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              {isMenuOpen ? (
+                <X className="h-4 w-4" />
+              ) : (
+                <Menu className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
@@ -125,7 +151,7 @@ export function Header() {
         {isMenuOpen && (
           <div className="md:hidden border-t border-border py-4">
             <nav className="flex flex-col space-y-4">
-              {mockSections.map((section) => (
+              {sections.map((section) => (
                 <div key={section.label}>
                   <a
                     href={section.href || "#"}
@@ -192,5 +218,5 @@ export function Header() {
         )}
       </div>
     </header>
-  )
+  );
 }
