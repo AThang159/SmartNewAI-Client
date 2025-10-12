@@ -301,11 +301,7 @@ export default function SearchPage() {
                           <div className="col-span-3">
                             {/* Thumbnail */}
                             {news.thumbnail && (
-                              <Link
-                                href={news.section + "/" + news.id}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
+                              <Link href={news.slug} rel="noopener noreferrer">
                                 <img
                                   src={news.thumbnail}
                                   alt={news.title}
@@ -319,8 +315,7 @@ export default function SearchPage() {
                           <div className="col-span-7 flex flex-col justify-between">
                             {/* Title */}
                             <Link
-                              href={news.id}
-                              target="_blank"
+                              href={news.slug}
                               rel="noopener noreferrer"
                               className="text-sm font-bold hover:underline cursor-pointer"
                             >

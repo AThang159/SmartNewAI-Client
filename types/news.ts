@@ -7,4 +7,5 @@ export interface News {
   section: string;
   thumbnail: string;
   article: string;
+  slug: string;
 }
