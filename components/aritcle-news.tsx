@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function ArticlePage() {
-  const { section, childSection, slug } = useParams();
+  const { slug } = useParams();
   const [news, setNews] = useState<News | null>(null);
   const [loading, setLoading] = useState(true);
   const [articleBody, setArticleBody] = useState<string[]>([]);
@@ -14,8 +14,7 @@ export default function ArticlePage() {
   useEffect(() => {
     async function getArticle() {
       try {
-        const slugUrl = `${section}/${childSection}/${slug}`;
-        const data = await fetchNewsDetail(slugUrl);
+        const data = await fetchNewsDetail(slug as string);
 
         let parsedArticle: any = data.article;
         if (typeof parsedArticle === "string") {
@@ -38,7 +37,7 @@ export default function ArticlePage() {
     }
 
     if (slug) getArticle();
-  }, [section, childSection, slug]);
+  }, [slug]);
 
   if (loading) return <p className="p-4 text-gray-500">Đang tải bài viết...</p>;
   if (!news || articleBody.length === 0)
