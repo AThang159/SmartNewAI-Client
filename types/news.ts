@@ -5,7 +5,12 @@ export interface News {
   description: string;
   published_time: string;
   section: string;
-  thumbnail: string;
-  article: string;
+  thumbnail: string | null;
+  view_count: number;
   slug: string;
+  article:
+    | {
+        ArticleBody: string[];
+      }
+    | string;
 }

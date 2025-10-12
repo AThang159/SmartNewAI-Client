@@ -1,34 +1,35 @@
 "use client";
 
 import { fetchNewsDetail } from "@/lib/api/news-api";
+import { News } from "@/types/news";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type ArticleResponse = {
-  ArticleBody: string[];
-};
-
 export default function ArticlePage() {
-  const { id } = useParams();
-  const [article, setArticle] = useState<ArticleResponse | null>(null);
+  const { section, childSection, slug } = useParams();
+  const [news, setNews] = useState<News | null>(null);
   const [loading, setLoading] = useState(true);
+  const [articleBody, setArticleBody] = useState<string[]>([]);
 
   useEffect(() => {
     async function getArticle() {
       try {
-        const data = await fetchNewsDetail(id);
+        const slugUrl = `${section}/${childSection}/${slug}`;
+        const data = await fetchNewsDetail(slugUrl);
 
-        // ✅ Nếu server trả về JSON string, parse lại
-        let parsedData = data?.article;
-        if (typeof parsedData === "string") {
+        let parsedArticle: any = data.article;
+        if (typeof parsedArticle === "string") {
           try {
-            parsedData = JSON.parse(parsedData);
-          } catch (e) {
-            console.error("Không parse được JSON:", e);
+            parsedArticle = JSON.parse(parsedArticle);
+          } catch (err) {
+            console.error("Không parse được article JSON:", err);
           }
         }
 
-        setArticle(parsedData);
+        setNews(data);
+        if (Array.isArray(parsedArticle?.ArticleBody)) {
+          setArticleBody(parsedArticle.ArticleBody);
+        }
       } catch (err) {
         console.error("Lỗi khi tải bài viết:", err);
       } finally {
@@ -36,17 +37,17 @@ export default function ArticlePage() {
       }
     }
 
-    if (id) getArticle();
-  }, [id]);
+    if (slug) getArticle();
+  }, [section, childSection, slug]);
 
   if (loading) return <p className="p-4 text-gray-500">Đang tải bài viết...</p>;
-  if (!article || !Array.isArray(article.ArticleBody))
+  if (!news || articleBody.length === 0)
     return <p className="p-4 text-red-500">Không có dữ liệu bài viết.</p>;
 
   return (
     <main className="max-w-3xl mx-auto p-6">
       <article className="prose prose-lg bg-white text-black p-6 rounded-2xl shadow-md">
-        {article.ArticleBody.map((html, index) => (
+        {articleBody.map((html, index) => (
           <div key={index} dangerouslySetInnerHTML={{ __html: html }} />
         ))}
       </article>

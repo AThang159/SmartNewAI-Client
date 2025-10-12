@@ -53,9 +53,9 @@ export async function fetchNews(params?: FetchNewsParams): Promise<News[]> {
   }
 }
 
-export async function fetchNewsDetail(id: string): Promise<News | null> {
+export async function fetchNewsDetail(slug: string): Promise<News | null> {
   try {
-    const res = await fetch(`${API_BACKEND_URL}/news/${id}`, {
+    const res = await fetch(`${API_BACKEND_URL}/news/${slug}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
