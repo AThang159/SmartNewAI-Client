@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/context/auth-context";
+import { fetchAnalyzeNews } from "@/lib/api/analyze-news-api";
 import { fetchNews } from "@/lib/api/news-api";
 import { fetchSentiments } from "@/lib/api/news-sentiment-api";
 import { News } from "@/types/news";
@@ -154,9 +155,9 @@ export default function SearchPage() {
     if (!results.length) return;
     setAnalyzing(true);
     try {
-      // const analyze = await fetchAnalyzeNews(results)
-      // setAnalyzeNews(analyze);
-      setAnalyzeNews(sampleAnalyze);
+      const analyze = await fetchAnalyzeNews(results);
+      setAnalyzeNews(analyze);
+      // setAnalyzeNews(sampleAnalyze);
     } catch (err) {
       console.error(err);
       setAnalyzeNews("Không thể phân tích (quota giới hạn).");
