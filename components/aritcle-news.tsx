@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchNewsDetail } from "@/lib/api/news-api";
+import { fetchNewsDetail, increaseNewsView } from "@/lib/api/news-api";
 import { News } from "@/types/news";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -23,6 +23,10 @@ export default function ArticlePage() {
           } catch (err) {
             console.error("Không parse được article JSON:", err);
           }
+        }
+
+        if (data?.id) {
+          await increaseNewsView(data.id);
         }
 
         setNews(data);

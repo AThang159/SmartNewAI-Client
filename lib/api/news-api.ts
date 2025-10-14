@@ -93,3 +93,24 @@ export async function fetchSections(): Promise<Section[]> {
     return [];
   }
 }
+
+/**
+ * Cộng +1 lượt xem cho bài viết
+ * @param newsId ID của bài viết
+ */
+export async function increaseNewsView(newsId: string): Promise<void> {
+  try {
+    const res = await fetch(`${API_BACKEND_URL}/news/${newsId}/seen`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      console.warn(`Failed to increase view count: ${res.status}`);
+    }
+  } catch (error) {
+    console.error("Error increasing news view:", error);
+  }
+}
