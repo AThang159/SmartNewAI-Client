@@ -154,8 +154,8 @@ export default function SearchPage() {
     if (!results.length) return;
     setAnalyzing(true);
     try {
-      // Nếu bạn có API thật thì dùng:
       // const analyze = await fetchAnalyzeNews(results)
+      // setAnalyzeNews(analyze);
       setAnalyzeNews(sampleAnalyze);
     } catch (err) {
       console.error(err);
@@ -383,9 +383,22 @@ export default function SearchPage() {
                     <p className="text-muted-foreground text-center">
                       Chưa có dữ liệu để phân tích.
                     </p>
-                    <Button onClick={handleAnalyze} disabled={!results.length}>
-                      Phân tích AI
-                    </Button>
+
+                    {isLoggedIn ? (
+                      <Button
+                        onClick={handleAnalyze}
+                        disabled={!results.length}
+                      >
+                        Phân tích AI
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => (window.location.href = "/login")}
+                        className="bg-gray-500 hover:bg-gray-600"
+                      >
+                        Đăng nhập để phân tích
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
