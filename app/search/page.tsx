@@ -176,10 +176,10 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="container mx-auto flex-2 px-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-20">
+      <main className="container mx-auto flex-2 px-10 pb-10">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Sidebar bộ lọc */}
-          <aside className="space-y-8 sticky top-20 h-fit">
+          <aside className="space-y-6 sticky top-20 h-fit">
             <h1 className="text-3xl font-bold mb-6">Tìm kiếm tin tức</h1>
 
             {/* Ô search */}
@@ -264,7 +264,7 @@ export default function SearchPage() {
           </aside>
 
           {/* Danh sách tin tức */}
-          <section className="md:col-span-3 grid grid-cols-3 gap-3">
+          <section className="md:col-span-4 grid grid-cols-3">
             <div className="col-span-2">
               {/* Pagination sticky */}
               {showPagination && (
@@ -290,10 +290,10 @@ export default function SearchPage() {
                       disabled={
                         offset === 0 || loading || analyzing || isWriting
                       }
-                      variant="ghost"
-                      className="w-16 h-16 flex items-center justify-center p-0"
+                      variant="outline"
+                      className="w-12 h-12 flex items-center justify-center rounded-lg text-lg"
                     >
-                      <ArrowLeft className="w-8 h-8" />
+                      <ArrowLeft className="w-6 h-6" />
                     </Button>
                     <Button
                       onClick={() => setOffset((prev) => prev + limit)}
@@ -303,10 +303,10 @@ export default function SearchPage() {
                         analyzing ||
                         isWriting
                       }
-                      variant="ghost"
-                      className="w-16 h-16 flex items-center justify-center p-0"
+                      variant="outline"
+                      className="w-12 h-12 flex items-center justify-center rounded-lg text-lg"
                     >
-                      <ArrowRight className="w-8 h-8" />
+                      <ArrowRight className="w-6 h-6" />
                     </Button>
                   </div>
                 </div>
