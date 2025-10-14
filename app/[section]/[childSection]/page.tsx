@@ -1,6 +1,5 @@
 "use client";
 
-import { CategorySections } from "@/components/category-sections";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { NewsGrid } from "@/components/news-grid";
@@ -31,7 +30,6 @@ export default function SectionPage({
       </div>
 
       <NewsletterSignup />
-      <CategorySections />
       <Footer />
     </div>
   );

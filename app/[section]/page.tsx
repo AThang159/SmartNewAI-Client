@@ -1,13 +1,16 @@
-"use client"
+"use client";
 
-import { Header } from "@/components/header"
-import { NewsGrid } from "@/components/news-grid"
-import { TrendingSidebar } from "@/components/trending-sidebar"
-import { NewsletterSignup } from "@/components/newsletter-signup"
-import { CategorySections } from "@/components/category-sections"
-import { Footer } from "@/components/footer"
+import { Footer } from "@/components/footer";
+import { Header } from "@/components/header";
+import { NewsGrid } from "@/components/news-grid";
+import { NewsletterSignup } from "@/components/newsletter-signup";
+import { TrendingSidebar } from "@/components/trending-sidebar";
 
-export default function SectionPage({ params }: { params: { section: string } }) {
+export default function SectionPage({
+  params,
+}: {
+  params: { section: string };
+}) {
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -24,8 +27,7 @@ export default function SectionPage({ params }: { params: { section: string } })
       </div>
 
       <NewsletterSignup />
-      <CategorySections />
       <Footer />
     </div>
-  )
+  );
 }

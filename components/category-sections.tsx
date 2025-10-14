@@ -1,130 +1,126 @@
-import { Badge } from "@/components/ui/badge"
-import { Clock, ArrowRight } from "lucide-react"
+"use client";
 
-interface CategoryArticle {
-  id: string
-  title: string
-  summary: string
-  timestamp: string
-  imageUrl?: string
+import { Badge } from "@/components/ui/badge";
+import { fetchNews, fetchSections } from "@/lib/api/news-api";
+import { News } from "@/types/news";
+import { Section } from "@/types/section";
+import { ArrowRight, Clock } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+
+interface SectionWithNews extends Section {
+  newsList?: News[];
 }
 
-interface CategorySection {
-  name: string
-  articles: CategoryArticle[]
-}
+export default function CategorySections() {
+  const [sections, setSections] = useState<SectionWithNews[]>([]);
+  const [loading, setLoading] = useState(true);
 
-const categorySections: CategorySection[] = [
-  {
-    name: "Technology",
-    articles: [
-      {
-        id: "tech1",
-        title: "AI Revolution Transforms Global Industries",
-        summary:
-          "Artificial intelligence adoption accelerates across sectors, reshaping business operations and workforce dynamics.",
-        timestamp: "2 hours ago",
-        imageUrl: "/artificial-intelligence-technology.png",
-      },
-      {
-        id: "tech2",
-        title: "Quantum Computing Breakthrough Announced",
-        summary:
-          "Scientists achieve new milestone in quantum processing power, promising advances in cryptography and research.",
-        timestamp: "4 hours ago",
-      },
-      {
-        id: "tech3",
-        title: "Social Media Platforms Face New Regulations",
-        summary: "Governments worldwide implement stricter data privacy and content moderation requirements.",
-        timestamp: "6 hours ago",
-      },
-    ],
-  },
-  {
-    name: "Business",
-    articles: [
-      {
-        id: "biz1",
-        title: "Global Supply Chain Disruptions Continue",
-        summary: "International trade faces ongoing challenges as companies adapt to new logistics realities.",
-        timestamp: "1 hour ago",
-        imageUrl: "/global-supply-chain-shipping-containers.jpg",
-      },
-      {
-        id: "biz2",
-        title: "Renewable Energy Investment Surges",
-        summary: "Clean energy projects attract record funding as companies commit to sustainability goals.",
-        timestamp: "3 hours ago",
-      },
-      {
-        id: "biz3",
-        title: "Merger Activity Reaches New Heights",
-        summary: "Corporate consolidation accelerates across multiple industries amid economic uncertainty.",
-        timestamp: "5 hours ago",
-      },
-    ],
-  },
-]
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const sectionData = await fetchSections();
 
-export function CategorySections() {
+        const sectionPromises = sectionData.map(async (section) => {
+          const dataNewsList = await fetchNews({
+            sections: [section.label],
+            limit: 4,
+            order_by: "published_time",
+            order_dir: "DESC",
+          });
+          const newsList = dataNewsList.items;
+          return { ...section, newsList };
+        });
+
+        const results = await Promise.all(sectionPromises);
+        console.log(results);
+        setSections(results);
+      } catch (error) {
+        console.error("Lỗi khi load section/news:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20 text-muted-foreground">
+        Đang tải danh mục tin tức...
+      </div>
+    );
+  }
+
   return (
-    <section className="container mx-auto px-4 py-12">
-      <div className="space-y-12">
-        {categorySections.map((section) => (
-          <div key={section.name}>
+    <section className="container mx-auto px-4 py-10 space-y-16">
+      {sections.map((section) => {
+        const newsList = section.newsList || [];
+
+        return (
+          <div key={section.label}>
+            {/* Header Section */}
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-foreground">{section.name}</h2>
-              <button className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
-                <span className="text-sm font-medium">View All</span>
+              <h2 className="text-2xl font-bold text-foreground">
+                {section.label}
+              </h2>
+              <Link
+                href={section.href}
+                className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors text-sm font-medium"
+              >
+                Xem tất cả
                 <ArrowRight className="h-4 w-4" />
-              </button>
+              </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {section.articles.map((article, index) => {
-                const articleClasses = index === 0 ? "group cursor-pointer md:col-span-2" : "group cursor-pointer"
-                const imageClasses =
-                  index === 0
-                    ? "w-full object-cover transition-transform group-hover:scale-105 h-64"
-                    : "w-full object-cover transition-transform group-hover:scale-105 h-48"
-                const titleClasses =
-                  index === 0
-                    ? "font-bold text-foreground group-hover:text-primary transition-colors text-balance text-xl"
-                    : "font-bold text-foreground group-hover:text-primary transition-colors text-balance text-lg"
-
-                return (
-                  <article key={article.id} className={articleClasses}>
-                    {article.imageUrl && (
-                      <div className="relative overflow-hidden rounded-lg mb-4">
+            {/* Danh sách tin */}
+            {newsList.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">
+                Chưa có tin nào trong mục này.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {newsList.map((news) => (
+                  <Link
+                    href={`/news/${news.slug}`}
+                    key={news.id}
+                    className="group block rounded-lg overflow-hidden border border-border hover:shadow-md transition-all duration-200"
+                  >
+                    {news.thumbnail && (
+                      <div className="relative overflow-hidden">
                         <img
-                          src={article.imageUrl || "/placeholder.svg"}
-                          alt={article.title}
-                          className={imageClasses}
+                          src={news.thumbnail}
+                          alt={news.title}
+                          className="w-full h-40 object-cover transition-transform duration-300 group-hover:scale-105"
                         />
-                        <Badge
-                          variant="secondary"
-                          className="absolute bottom-4 left-4 bg-background/90 text-foreground"
-                        >
-                          {section.name}
+                        <Badge className="absolute bottom-2 left-2 bg-background/80 text-foreground text-xs">
+                          {section.label}
                         </Badge>
                       </div>
                     )}
-                    <div className="space-y-2">
-                      <h3 className={titleClasses}>{article.title}</h3>
-                      <p className="text-muted-foreground leading-relaxed text-pretty">{article.summary}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        <span>{article.timestamp}</span>
+
+                    <div className="p-3 space-y-2">
+                      <h3 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors line-clamp-2">
+                        {news.title}
+                      </h3>
+                      <p className="text-muted-foreground text-xs line-clamp-2">
+                        {news.description}
+                      </p>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground pt-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(news.published_time).toLocaleDateString(
+                          "vi-VN"
+                        )}
                       </div>
                     </div>
-                  </article>
-                )
-              })}
-            </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
-        ))}
-      </div>
+        );
+      })}
     </section>
-  )
+  );
 }
