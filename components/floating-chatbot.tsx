@@ -1,72 +1,89 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import { MessageCircle, X } from "lucide-react"
-import ReactMarkdown from "react-markdown"
-import remarkGfm from "remark-gfm"
-import { fetchReplyChatBot } from "@/lib/api/chatbot-api"
+import { useAuth } from "@/context/auth-context";
+import { fetchChatHistory, fetchReplyChatBot } from "@/lib/api/chatbot-api";
+import { MessageCircle, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Message = {
-  sender: "user" | "bot"
-  text: string
-}
+  sender: "user" | "bot";
+  text: string;
+};
 
 export default function FloatingChatbot() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState("")
-  const [loading, setLoading] = useState(false)
-  const chatContainerRef = useRef<HTMLDivElement | null>(null)
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const { isLoggedIn, user, loading, refreshUser } = useAuth();
+  const [loadingMessage, setLoadingMessage] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
-  }, [messages, loading])
+  }, [messages, loadingMessage]);
+
+  useEffect(() => {
+    if (!user) return;
+    async function loadHistory() {
+      try {
+        const history = await fetchChatHistory(user.sub);
+        setMessages(history);
+      } catch (err) {
+        console.error("Không thể tải lịch sử:", err);
+      }
+    }
+    loadHistory();
+  }, [user]);
 
   const sendMessage = async () => {
-    if (!input.trim()) return
+    if (!input.trim()) return;
 
-    const newMessage: Message = { sender: "user", text: input }
-    setMessages((prev) => [...prev, newMessage])
-    setInput("")
-    setLoading(true)
+    const newMessage: Message = { sender: "user", text: input };
+    setMessages((prev) => [...prev, newMessage]);
+    setInput("");
+    setLoadingMessage(true);
 
     try {
       // Gọi API thật thay vì dữ liệu giả lập
-      // const botResponse = await fetchReplyChatBot(input)
-      const botResponse = example_data
+      const botResponse = await fetchReplyChatBot(input);
+      // const botResponse = example_data
 
       // Nếu API trả về JSON hoặc text khác, bạn có thể xử lý ở đây:
-      // const replyText = botResponse === ""
-      //   ? botResponse
-      //   : botResponse || "⚠️ Không có phản hồi từ server."
+      const replyText =
+        typeof botResponse === "string"
+          ? botResponse
+          : botResponse || "⚠️ Không có phản hồi từ server.";
 
-      const replyText = botResponse
+      // const replyText = botResponse;
 
       // Hiệu ứng gõ từng ký tự ra dần
-      let currentText = ""
-      setMessages((prev) => [...prev, { sender: "bot", text: "" }])
+      let currentText = "";
+      setMessages((prev) => [...prev, { sender: "bot", text: "" }]);
 
       for (let i = 0; i < replyText.length; i++) {
-        currentText += replyText[i]
+        currentText += replyText[i];
         setMessages((prev) => {
-          const newMessages = [...prev]
-          newMessages[newMessages.length - 1].text = currentText
-          return newMessages
-        })
-        await new Promise((r) => setTimeout(r, 10)) // tốc độ gõ
+          const newMessages = [...prev];
+          newMessages[newMessages.length - 1].text = currentText;
+          return newMessages;
+        });
+        await new Promise((r) => setTimeout(r, 10)); // tốc độ gõ
       }
     } catch (err) {
-      console.error(err)
+      console.error(err);
       setMessages((prev) => [
         ...prev,
         { sender: "bot", text: "⚠️ Lỗi kết nối server!" },
-      ])
+      ]);
     } finally {
-      setLoading(false)
+      setLoadingMessage(false);
     }
-  }
+  };
   return (
     <>
       {/* Nút bật/tắt */}
@@ -102,10 +119,16 @@ export default function FloatingChatbot() {
                   remarkPlugins={[remarkGfm]}
                   components={{
                     h1: ({ node, ...props }) => (
-                      <h1 className="text-base font-bold text-blue-700" {...props} />
+                      <h1
+                        className="text-base font-bold text-blue-700"
+                        {...props}
+                      />
                     ),
                     h2: ({ node, ...props }) => (
-                      <h2 className="text-sm font-semibold text-blue-600" {...props} />
+                      <h2
+                        className="text-sm font-semibold text-blue-600"
+                        {...props}
+                      />
                     ),
                     strong: ({ node, ...props }) => (
                       <strong className="font-bold text-blue-700" {...props} />
@@ -114,7 +137,10 @@ export default function FloatingChatbot() {
                       <p className="mb-1 text-sm" {...props} />
                     ),
                     ul: ({ node, ...props }) => (
-                      <ul className="list-disc list-inside ml-3 mb-1 text-sm" {...props} />
+                      <ul
+                        className="list-disc list-inside ml-3 mb-1 text-sm"
+                        {...props}
+                      />
                     ),
                     li: ({ node, ...props }) => (
                       <li className="mb-1" {...props} />
@@ -126,7 +152,9 @@ export default function FloatingChatbot() {
               </div>
             ))}
 
-            {loading && <p className="text-gray-500 italic">Bot đang phản hồi...</p>}
+            {loadingMessage && (
+              <p className="text-gray-500 italic">Bot đang phản hồi...</p>
+            )}
           </div>
 
           {/* Ô nhập */}
@@ -148,14 +176,13 @@ export default function FloatingChatbot() {
         </div>
       )}
     </>
-  )
+  );
 }
 
-const example_data = 
-`# Báo cáo Phân tích Thị trường
+const example_data = `# Báo cáo Phân tích Thị trường
 
 ## 1. Tình hình chung
-Trong **quý 3 năm 2025**, nền kinh tế Việt Nam **tăng trưởng ổn định** với GDP đạt mức **+6.4%**.  
+Trong **quý 3 năm 2025**, nền kinh tế Việt Nam **tăng trưởng ổn định** với GDP đạt mức **+6.4%**.
 Các ngành đóng góp chính:
 - **Ngân hàng:** tăng trưởng lợi nhuận 8%
 - **Công nghiệp:** duy trì sản xuất tốt, xuất khẩu tăng
@@ -167,5 +194,5 @@ Kết quả phân tích cảm xúc từ 1.200 bài báo cho thấy:
 - **Trung lập:** 25%
 - **Tiêu cực:** 13%
 
-> *Nhận định:* Nhà đầu tư đang có xu hướng lạc quan trở lại, đặc biệt trong nhóm cổ phiếu ngân hàng và công nghệ. 
-`
+> *Nhận định:* Nhà đầu tư đang có xu hướng lạc quan trở lại, đặc biệt trong nhóm cổ phiếu ngân hàng và công nghệ.
+`;
