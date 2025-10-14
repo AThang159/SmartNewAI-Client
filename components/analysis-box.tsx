@@ -1,28 +1,39 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import ReactMarkdown from "react-markdown"
-import remarkGfm from "remark-gfm"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface AnalysisBoxProps {
-  text: string
+  text: string;
+  onWritingChange?: (isWriting: boolean) => void;
 }
 
-export default function AnalysisBox({ text }: AnalysisBoxProps) {
-  const [displayedText, setDisplayedText] = useState("")
-  const [index, setIndex] = useState(0)
+export default function AnalysisBox({
+  text,
+  onWritingChange,
+}: AnalysisBoxProps) {
+  const [displayedText, setDisplayedText] = useState("");
 
-  // Hiệu ứng đánh chữ từng ký tự
   useEffect(() => {
-    if (index < text.length) {
-      const timer = setTimeout(() => {
-        setDisplayedText((prev) => prev + text[index])
-        setIndex(index + 1)
-      }, 8)
-      return () => clearTimeout(timer)
-    }
-  }, [index, text])
+    if (!text) return;
+    setDisplayedText("");
+    onWritingChange?.(true);
+
+    let index = 0;
+    const interval = setInterval(() => {
+      setDisplayedText((prev) => prev + text[index]);
+      index++;
+
+      if (index >= text.length) {
+        clearInterval(interval);
+        onWritingChange?.(false);
+      }
+    }, 8);
+
+    return () => clearInterval(interval);
+  }, [text]);
 
   return (
     <Card className="border-2 border-blue-400 shadow-md bg-white rounded-xl w-full">
@@ -32,13 +43,22 @@ export default function AnalysisBox({ text }: AnalysisBoxProps) {
             remarkPlugins={[remarkGfm]}
             components={{
               h1: ({ node, ...props }) => (
-                <h1 className="text-xl font-bold text-blue-700 mt-4 mb-2" {...props} />
+                <h1
+                  className="text-xl font-bold text-blue-700 mt-4 mb-2"
+                  {...props}
+                />
               ),
               h2: ({ node, ...props }) => (
-                <h2 className="text-lg font-semibold text-blue-600 mt-3 mb-1" {...props} />
+                <h2
+                  className="text-lg font-semibold text-blue-600 mt-3 mb-1"
+                  {...props}
+                />
               ),
               h3: ({ node, ...props }) => (
-                <h3 className="text-base font-semibold text-blue-500 mt-2 mb-1" {...props} />
+                <h3
+                  className="text-base font-semibold text-blue-500 mt-2 mb-1"
+                  {...props}
+                />
               ),
               strong: ({ node, ...props }) => (
                 <strong className="font-bold text-blue-700" {...props} />
@@ -59,5 +79,5 @@ export default function AnalysisBox({ text }: AnalysisBoxProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

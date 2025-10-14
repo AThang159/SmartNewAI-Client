@@ -58,6 +58,7 @@ export default function SearchPage() {
   const limit = 10;
   const [analyzeNews, setAnalyzeNews] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
+  const [isWriting, setIsWriting] = useState(false);
 
   const [showPagination, setShowPagination] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -103,6 +104,7 @@ export default function SearchPage() {
 
   const loadNews = async () => {
     try {
+      setAnalyzeNews("");
       const newsList: any = await fetchNews({
         q: searchQuery || undefined,
         sections: selectedCategory !== "All" ? [selectedCategory] : undefined,
@@ -189,7 +191,10 @@ export default function SearchPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               />
-              <Button onClick={handleSearch} disabled={loading}>
+              <Button
+                onClick={handleSearch}
+                disabled={loading || analyzing || isWriting}
+              >
                 {loading ? "Đang tải..." : "Tìm"}
               </Button>
             </div>
@@ -199,6 +204,7 @@ export default function SearchPage() {
               <h2 className="font-semibold mb-2">Chuyên mục</h2>
               <Select
                 value={selectedCategory}
+                disabled={analyzing || isWriting}
                 onValueChange={setSelectedCategory}
               >
                 <SelectTrigger className="w-full">
@@ -217,7 +223,11 @@ export default function SearchPage() {
             {/* Time filter */}
             <div>
               <h2 className="font-semibold mb-2">Thời gian</h2>
-              <Select value={selectedTime} onValueChange={setSelectedTime}>
+              <Select
+                value={selectedTime}
+                disabled={analyzing || isWriting}
+                onValueChange={setSelectedTime}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Chọn thời gian" />
                 </SelectTrigger>
@@ -234,7 +244,11 @@ export default function SearchPage() {
             {/* Sort filter */}
             <div>
               <h2 className="font-semibold mb-2">Sắp xếp</h2>
-              <Select value={selectedSort} onValueChange={setSelectedSort}>
+              <Select
+                value={selectedSort}
+                disabled={analyzing || isWriting}
+                onValueChange={setSelectedSort}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Chọn thứ tự" />
                 </SelectTrigger>
@@ -273,7 +287,9 @@ export default function SearchPage() {
                       onClick={() =>
                         setOffset((prev) => Math.max(prev - limit, 0))
                       }
-                      disabled={offset === 0 || loading}
+                      disabled={
+                        offset === 0 || loading || analyzing || isWriting
+                      }
                       variant="ghost"
                       className="w-16 h-16 flex items-center justify-center p-0"
                     >
@@ -281,7 +297,12 @@ export default function SearchPage() {
                     </Button>
                     <Button
                       onClick={() => setOffset((prev) => prev + limit)}
-                      disabled={offset + limit >= (total || 0) || loading}
+                      disabled={
+                        offset + limit >= (total || 0) ||
+                        loading ||
+                        analyzing ||
+                        isWriting
+                      }
                       variant="ghost"
                       className="w-16 h-16 flex items-center justify-center p-0"
                     >
@@ -378,7 +399,10 @@ export default function SearchPage() {
                     Đang phân tích tin tức...
                   </p>
                 ) : analyzeNews ? (
-                  <AnalysisBox text={analyzeNews} />
+                  <AnalysisBox
+                    text={analyzeNews}
+                    onWritingChange={setIsWriting}
+                  />
                 ) : (
                   <div className="flex flex-col items-center gap-3">
                     <p className="text-muted-foreground text-center">
