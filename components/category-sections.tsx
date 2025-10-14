@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { fetchNews, fetchSections } from "@/lib/api/news-api";
 import { News } from "@/types/news";
 import { Section } from "@/types/section";
-import { ArrowRight, Clock } from "lucide-react";
+import { ArrowRight, Clock, Eye } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -33,7 +33,6 @@ export default function CategorySections() {
         });
 
         const results = await Promise.all(sectionPromises);
-        console.log(results);
         setSections(results);
       } catch (error) {
         console.error("Lỗi khi load section/news:", error);
@@ -94,9 +93,17 @@ export default function CategorySections() {
                           alt={news.title}
                           className="w-full h-40 object-cover transition-transform duration-300 group-hover:scale-105"
                         />
+
+                        {/* Badge: tên section */}
                         <Badge className="absolute bottom-2 left-2 bg-background/80 text-foreground text-xs">
                           {section.label}
                         </Badge>
+
+                        {/* View count */}
+                        <div className="absolute bottom-2 right-2 bg-background/80 text-foreground text-xs px-2 py-0.5 rounded flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          {news.view_count ?? 0}
+                        </div>
                       </div>
                     )}
 
