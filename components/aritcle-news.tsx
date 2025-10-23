@@ -1,50 +1,30 @@
 "use client";
 
-import { fetchNewsDetail, increaseNewsView } from "@/lib/api/news-api";
+import { increaseNewsView } from "@/lib/api/news-api";
 import { News } from "@/types/news";
-import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function ArticlePage() {
-  const { slug } = useParams();
-  const [news, setNews] = useState<News | null>(null);
-  const [loading, setLoading] = useState(true);
+type Props = { news: News };
+
+export default function ArticleNews({ news }: Props) {
   const [articleBody, setArticleBody] = useState<string[]>([]);
 
   useEffect(() => {
-    async function getArticle() {
+    if (news?.id) increaseNewsView(news.id);
+
+    if (typeof news.article === "string") {
       try {
-        const data = await fetchNewsDetail(slug as string);
-
-        let parsedArticle: any = data.article;
-        if (typeof parsedArticle === "string") {
-          try {
-            parsedArticle = JSON.parse(parsedArticle);
-          } catch (err) {
-            console.error("Không parse được article JSON:", err);
-          }
-        }
-
-        if (data?.id) {
-          await increaseNewsView(data.id);
-        }
-
-        setNews(data);
-        if (Array.isArray(parsedArticle?.ArticleBody)) {
-          setArticleBody(parsedArticle.ArticleBody);
-        }
-      } catch (err) {
-        console.error("Lỗi khi tải bài viết:", err);
-      } finally {
-        setLoading(false);
+        const parsed = JSON.parse(news.article);
+        if (Array.isArray(parsed.ArticleBody)) setArticleBody(parsed.ArticleBody);
+      } catch {
+        console.error("Không parse được ArticleBody");
       }
+    } else if (Array.isArray(news.article?.ArticleBody)) {
+      setArticleBody(news.article.ArticleBody);
     }
+  }, [news]);
 
-    if (slug) getArticle();
-  }, [slug]);
-
-  if (loading) return <p className="p-4 text-gray-500">Đang tải bài viết...</p>;
-  if (!news || articleBody.length === 0)
+  if (!articleBody.length)
     return <p className="p-4 text-red-500">Không có dữ liệu bài viết.</p>;
 
   return (

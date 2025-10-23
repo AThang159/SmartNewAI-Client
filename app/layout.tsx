@@ -1,12 +1,12 @@
-import type { Metadata } from "next"
-import { GeistSans, GeistMono } from "@/lib/fonts"
-import { Analytics } from "@vercel/analytics/next"
-import "./globals.css"
-import { AuthProvider } from "@/context/auth-context"
 import FloatingChatbot from "@/components/floating-chatbot"
+import { AuthProvider } from "@/context/auth-context"
+import { GeistMono, GeistSans } from "@/lib/fonts"
+import { Analytics } from "@vercel/analytics/next"
+import type { Metadata } from "next"
+import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "My App",
+  title: "Smart News AI",
   description: "Next.js App with Tailwind & shadcn",
 }
 

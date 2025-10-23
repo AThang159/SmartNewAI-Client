@@ -1,33 +1,42 @@
-"use client";
+import type { Metadata } from "next";
+import SectionPageClient from "./section-page";
 
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
-import { NewsGrid } from "@/components/news-grid";
-import { NewsletterSignup } from "@/components/newsletter-signup";
-import { TrendingSidebar } from "@/components/trending-sidebar";
+type Props = {
+  params: {
+    section: string;
+  };
+};
 
-export default function SectionPage({
-  params,
-}: {
-  params: { section: string };
-}) {
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
+function capitalizeWords(slug: string) {
+  return slug
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-3">
-            <NewsGrid section={params.section} />
-          </div>
-          <div className="lg:col-span-1">
-            <TrendingSidebar />
-          </div>
-        </div>
-      </div>
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const sectionName = capitalizeWords(params.section);
 
-      <NewsletterSignup />
-      <Footer />
-    </div>
-  );
+  const title = `${sectionName} | Smart News AI`;
+  const description = `Tin tức mới nhất về ${sectionName.toLowerCase()}, được tổng hợp và phân tích bởi Smart News AI.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      siteName: "Smart News AI",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description
+    },
+  };
+}
+
+export default function SectionPage({ params }: Props) {
+  return <SectionPageClient params={params} />;
 }
