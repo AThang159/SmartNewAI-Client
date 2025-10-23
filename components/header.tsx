@@ -71,10 +71,15 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-primary tracking-tight">
-              Reuters
-            </h1>
+          <div
+            className="flex items-center cursor-pointer"
+            onClick={() => router.push("/")}
+          >
+            <img
+              src="../static/logo.png"  
+              alt="Logo"
+              className="h-8 w-auto object-contain"
+            />
           </div>
 
           {/* Desktop Navigation */}
