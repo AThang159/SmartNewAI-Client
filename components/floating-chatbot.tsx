@@ -1,60 +1,107 @@
 "use client";
 
+import { useArticle } from "@/context/article-content-context";
 import { useAuth } from "@/context/auth-context";
 import { fetchChatHistory, fetchReplyChatBot } from "@/lib/api/chatbot-api";
 import { MessageCircle, Square, X } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import SelectionChatTrigger from "./selection-chat-trigger";
 
 type Message = {
-  sender: "user" | "bot";
+  sender: "user" | "bot" | "context";
   text: string;
 };
 
 export default function FloatingChatbot() {
+  const pathname = usePathname();
+  const { content: articleContent } = useArticle();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const { isLoggedIn, user } = useAuth();
   const [loadingMessage, setLoadingMessage] = useState(false);
-  const [typing, setTyping] = useState(false); // Trạng thái bot đang gõ
+  const [typing, setTyping] = useState(false);
+  const [selectedContext, setSelectedContext] = useState<string | null>(null);
+  const isReadingNews = pathname.startsWith("/news/");
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
-  const stopTypingRef = useRef(false); // Biến kiểm soát việc dừng typing
+  const stopTypingRef = useRef(false);
 
-  // Tự cuộn xuống cuối mỗi khi có tin nhắn mới
+  // Tự cuộn xuống cuối khi có tin nhắn mới
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
-    }
+    chatContainerRef.current?.scrollTo({
+      top: chatContainerRef.current.scrollHeight,
+      behavior: "smooth",
+    });
   }, [messages, loadingMessage]);
 
-  // Tải lịch sử chat khi có user
+  // Tải lịch sử chat
   useEffect(() => {
     if (!user) return;
-    async function loadHistory() {
+    (async () => {
       try {
-        const history = await fetchChatHistory(user.sub);
+        let history = await fetchChatHistory(user.sub);
+        history = history.flatMap((msg: Message) => {
+          if (
+            msg.sender === "user" &&
+            msg.text.startsWith("Câu hỏi trích dẫn:")
+          ) {
+            const match = msg.text.match(/"([^"]+)"/); // lấy phần trong dấu ""
+            const quote = match?.[1] || "";
+            const rest = msg.text
+              .replace(/Câu hỏi trích dẫn:\s*".*?"/, "")
+              .trim(); // phần còn lại
+            const result: Message[] = [];
+            if (quote) result.push({ sender: "context", text: quote }); // trích dẫn
+            if (rest) result.push({ sender: "user", text: rest }); // phần hỏi còn lại
+            return result;
+          }
+          return msg;
+        });
+
         setMessages(history);
       } catch (err) {
         console.error("Không thể tải lịch sử:", err);
       }
-    }
-    loadHistory();
+    })();
   }, [user]);
 
+  // Gửi tin nhắn
   const sendMessage = async () => {
     if (!input.trim() || loadingMessage || typing) return;
 
-    const newMessage: Message = { sender: "user", text: input };
-    setMessages((prev) => [...prev, newMessage]);
+    const contextMessage = selectedContext
+      ? { sender: "context" as const, text: selectedContext }
+      : null;
+
+    const newUserMsg: Message = { sender: "user", text: input };
+
+    setMessages((prev) =>
+      contextMessage
+        ? [...prev, contextMessage, newUserMsg]
+        : [...prev, newUserMsg]
+    );
+
+    const plainTextArticle =
+      articleContent
+        ?.map((item) => item.replace(/<[^>]*>/g, "").replace(/['"]/g, "")) // loại bỏ tất cả thẻ HTML
+        .join(" ") || "";
+
+    const payload = {
+      selected: selectedContext || "",
+      question: input,
+      article: plainTextArticle || "",
+    };
+
+    setSelectedContext(null);
     setInput("");
     setLoadingMessage(true);
 
     try {
-      const botResponse = await fetchReplyChatBot(input);
+      const botResponse = await fetchReplyChatBot(payload);
       const replyText =
         typeof botResponse === "string"
           ? botResponse
@@ -64,19 +111,18 @@ export default function FloatingChatbot() {
       setTyping(true);
       stopTypingRef.current = false;
 
-      // Hiệu ứng gõ từng ký tự
       let currentText = "";
       setMessages((prev) => [...prev, { sender: "bot", text: "" }]);
 
       for (let i = 0; i < replyText.length; i++) {
-        if (stopTypingRef.current) break; // Dừng nếu người dùng nhấn nút dừng
+        if (stopTypingRef.current) break;
         currentText += replyText[i];
         setMessages((prev) => {
           const newMessages = [...prev];
           newMessages[newMessages.length - 1].text = currentText;
           return newMessages;
         });
-        await new Promise((r) => setTimeout(r, 0.0001)); // tốc độ gõ
+        await new Promise((r) => setTimeout(r, 5));
       }
     } catch (err) {
       console.error(err);
@@ -90,7 +136,7 @@ export default function FloatingChatbot() {
     }
   };
 
-  // Hàm dừng typing
+  // Dừng typing
   const stopTyping = () => {
     stopTypingRef.current = true;
     setTyping(false);
@@ -98,6 +144,17 @@ export default function FloatingChatbot() {
 
   return (
     <>
+      {/* Component bôi đen hỏi AI */}
+      {isReadingNews && (
+        <SelectionChatTrigger
+          onAsk={(text) => {
+            setIsOpen(true);
+            setSelectedContext(text);
+            setInput("");
+          }}
+        />
+      )}
+
       {/* Nút mở chat */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -109,12 +166,10 @@ export default function FloatingChatbot() {
       {/* Hộp chat */}
       {isOpen && (
         <div className="fixed bottom-20 right-6 w-80 h-[500px] bg-white border shadow-xl rounded-xl flex flex-col overflow-hidden">
-          {/* Header */}
           <div className="bg-blue-600 text-white p-3 font-semibold text-center">
             Trợ lý AI
           </div>
 
-          {/* Nếu chưa đăng nhập → hiện nút đăng nhập */}
           {!isLoggedIn ? (
             <div className="flex flex-col justify-center items-center flex-1 p-6 text-center">
               <p className="text-gray-700 text-sm mb-4">
@@ -129,64 +184,66 @@ export default function FloatingChatbot() {
             </div>
           ) : (
             <>
-              {/* Nội dung chat */}
               <div
                 ref={chatContainerRef}
                 className="flex-1 overflow-y-auto p-3 space-y-3"
               >
-                {messages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`p-2 rounded-lg text-sm ${
-                      msg.sender === "user"
-                        ? "bg-blue-500 text-white text-right ml-auto"
-                        : "bg-gray-100 text-black text-left mr-auto"
-                    }`}
-                  >
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        h1: ({ node, ...props }) => (
-                          <h1
-                            className="text-base font-bold text-blue-700"
-                            {...props}
-                          />
-                        ),
-                        h2: ({ node, ...props }) => (
-                          <h2
-                            className="text-sm font-semibold text-blue-600"
-                            {...props}
-                          />
-                        ),
-                        strong: ({ node, ...props }) => (
-                          <strong
-                            className="font-bold text-blue-700"
-                            {...props}
-                          />
-                        ),
-                        p: ({ node, ...props }) => (
-                          <p className="mb-1 text-sm" {...props} />
-                        ),
-                        ul: ({ node, ...props }) => (
-                          <ul
-                            className="list-disc list-inside ml-3 mb-1 text-sm"
-                            {...props}
-                          />
-                        ),
-                        li: ({ node, ...props }) => (
-                          <li className="mb-1" {...props} />
-                        ),
-                      }}
+                {messages.map((msg, i) => {
+                  const isContext =
+                    msg.sender === "context" || (msg as any).selectedContext;
+                  const displayText = isContext
+                    ? (msg as any).selectedContext || msg.text
+                    : msg.text;
+
+                  return (
+                    <div
+                      key={i}
+                      className={`p-2 rounded-lg text-sm ${
+                        msg.sender === "user"
+                          ? "bg-blue-500 text-white text-right ml-auto"
+                          : isContext
+                          ? "bg-gray-100 border-l-4 border-blue-500 text-gray-700 italic text-left"
+                          : "bg-gray-100 text-black text-left mr-auto"
+                      }`}
                     >
-                      {msg.text}
-                    </ReactMarkdown>
-                  </div>
-                ))}
+                      {isContext ? (
+                        <p>📄 "{displayText}"</p>
+                      ) : (
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            p: ({ node, ...props }) => (
+                              <p className="mb-1 text-sm" {...props} />
+                            ),
+                          }}
+                        >
+                          {displayText}
+                        </ReactMarkdown>
+                      )}
+                    </div>
+                  );
+                })}
 
                 {(loadingMessage || typing) && (
                   <p className="text-gray-500 italic">Bot đang phản hồi...</p>
                 )}
               </div>
+
+              {/* Nếu có đoạn trích đang chọn */}
+              {selectedContext && (
+                <div className="border-t border-gray-200 bg-gray-50 p-2 text-xs text-gray-600">
+                  <p className="font-semibold text-blue-600 mb-1">
+                    📄 Đoạn được trích:
+                  </p>
+                  <p className="italic">"{selectedContext}"</p>
+                  <button
+                    onClick={() => setSelectedContext(null)}
+                    className="text-red-500 text-[11px] hover:underline mt-1"
+                  >
+                    ✖ Bỏ đoạn trích
+                  </button>
+                </div>
+              )}
 
               {/* Ô nhập */}
               <div className="flex border-t">

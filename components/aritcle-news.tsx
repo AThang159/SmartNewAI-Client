@@ -1,5 +1,6 @@
 "use client";
 
+import { useArticle } from "@/context/article-content-context";
 import { increaseNewsView } from "@/lib/api/news-api";
 import { News } from "@/types/news";
 import { useEffect, useState } from "react";
@@ -7,6 +8,7 @@ import { useEffect, useState } from "react";
 type Props = { news: News };
 
 export default function ArticleNews({ news }: Props) {
+  const { setContent } = useArticle();
   const [articleBody, setArticleBody] = useState<string[]>([]);
   const cleanHtmlSegment = (html: string) => {
     const parser = new DOMParser();
@@ -43,10 +45,16 @@ export default function ArticleNews({ news }: Props) {
     }
   }, [news]);
 
+  useEffect(() => {
+    setContent(articleBody);
+    return () => setContent(null); // reset khi rời page
+  }, [articleBody]);
+
   if (!articleBody.length)
     return <p className="p-4 text-red-500">Không có dữ liệu bài viết.</p>;
 
   return (
+    <>
     <main className="max-w-3xl mx-auto">
       <article className="prose prose-lg bg-white text-black p-6 shadow-md">
         {/* Khung thông tin cơ bản */}
@@ -66,5 +74,6 @@ export default function ArticleNews({ news }: Props) {
         ))}
       </article>
     </main>
+    </>
   );
 }
