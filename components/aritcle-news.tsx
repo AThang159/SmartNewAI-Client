@@ -47,7 +47,7 @@ export default function ArticleNews({ news }: Props) {
     return <p className="p-4 text-red-500">Không có dữ liệu bài viết.</p>;
 
   return (
-    <main className="max-w-3xl mx-auto p-6">
+    <main className="max-w-3xl mx-auto">
       <article className="prose prose-lg bg-white text-black p-6 shadow-md">
         {/* Khung thông tin cơ bản */}
         <header className="bg-white shadow-md p-6">

@@ -1,7 +1,7 @@
-import ArticleNews from "@/components/aritcle-news";
-import { Header } from "@/components/header";
+
 import { fetchNewsDetail } from "@/lib/api/news-api";
 import type { Metadata } from "next";
+import NewsDetailPage from "./news-page";
 
 type Props = {
   params: { slug: string };
@@ -35,15 +35,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function NewsDetailPage({ params }: Props) {
-  const news = await fetchNewsDetail(params.slug);
-
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="container mx-auto">
-        <ArticleNews news={news} />
-      </div>
-    </div>
-  );
+export default async function Page({ params }: Props) {
+  return <NewsDetailPage params={params} />;
 }

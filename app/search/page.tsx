@@ -389,44 +389,7 @@ export default function SearchPage() {
             </div>
             {/* Phân tích AI */}
             <aside className="col-span-1 space-y-4">
-              <div className="w-full bg-gray-50 border-2 border-blue-400 rounded-xl p-4 shadow-md">
-                <h1 className="text-lg font-bold text-blue-700 mb-3 text-center">
-                  Phân tích chung của AI
-                </h1>
-
-                {analyzing ? (
-                  <p className="text-muted-foreground italic animate-pulse text-center">
-                    Đang phân tích tin tức...
-                  </p>
-                ) : analyzeNews ? (
-                  <AnalysisBox
-                    text={analyzeNews}
-                    onWritingChange={setIsWriting}
-                  />
-                ) : (
-                  <div className="flex flex-col items-center gap-3">
-                    <p className="text-muted-foreground text-center">
-                      Chưa có dữ liệu để phân tích.
-                    </p>
-
-                    {isLoggedIn ? (
-                      <Button
-                        onClick={handleAnalyze}
-                        disabled={!results.length}
-                      >
-                        Phân tích AI
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={() => (window.location.href = "/login")}
-                        className="bg-gray-500 hover:bg-gray-600"
-                      >
-                        Đăng nhập để phân tích
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
+              <AnalysisBox news={results} />
             </aside>
           </section>
         </div>
