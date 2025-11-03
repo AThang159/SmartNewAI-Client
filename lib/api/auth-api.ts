@@ -20,13 +20,13 @@ export async function login(email: string, password: string) {
   return res.json();
 }
 
-export async function register(email: string, password: string) {
+export async function register(email: string, username: string, password: string) {
   const res = await fetch(`${API_BACKEND_URL}/auth/sign_up`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, username, password }),
     credentials: "include",
   });
 

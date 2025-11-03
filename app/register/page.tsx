@@ -1,15 +1,15 @@
 "use client"
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Eye, EyeOff, ArrowLeft, Mail } from "lucide-react"
-import { register, fetchCurrentUser } from "@/lib/api/auth-api"
+import { fetchCurrentUser, register } from "@/lib/api/auth-api"
+import { ArrowLeft, Eye, EyeOff, Mail } from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import type React from "react"
+import { useEffect, useState } from "react"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -18,6 +18,7 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
+    username: "",
     password: "",
     confirmPassword: "",
   })
@@ -55,7 +56,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const data = await register(formData.email, formData.password)
+      const data = await register(formData.email, formData.username, formData.password)
       console.log("✅ Register success:", data)
 
       setSuccess(true)
@@ -109,6 +110,17 @@ export default function RegisterPage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="email">Tên đăng nhập</Label>
+                  <Input
+                    id="username"
+                    type="username"
+                    value={formData.username}
+                    onChange={(e) => handleInputChange("username", e.target.value)}
                     required
                   />
                 </div>
